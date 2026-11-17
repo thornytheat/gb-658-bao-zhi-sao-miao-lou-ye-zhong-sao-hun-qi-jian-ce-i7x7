@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="kpis">
+  <div class="kpi"><b>计划版本</b><strong>v2</strong><small>期版</small></div>
+  <div class="kpi"><b>冻结签章</b><strong>原件</strong><small>不可改</small></div>
+  <div class="kpi"><b>复验差异</b><strong>另存</strong><small>不覆盖</small></div>
+  <div class="kpi"><b>并发控制</b><strong>版本</strong><small>拒陈旧</small></div>
+</section>
+<div class="grid grid--receipt">
+  <section class="panel">
+    <div class="panel__head"><h2>修订与验收台账</h2><span class="state state--ok">可回读</span></div>
+    <div class="panel__body panel__body--scroll">
+      <table class="ledger"><thead><tr><th>序号</th><th>期版 / 批次</th><th>状态</th><th>依据 / 标识</th></tr></thead>
+      <tbody>{% for row in rows %}<tr><td class="num">{{ loop.index }}</td><td>{{ row.key }}</td><td>{{ row.status }}</td><td>{{ row.value }}</td></tr>{% endfor %}</tbody></table>
+    </div>
+  </section>
+  <section class="panel panel--evidence">
+    <div class="panel__head"><h2>核对口径</h2><span class="panel__meta">应有 · 实有 · 缺失 · 越界</span></div>
+    <div class="panel__body"><div class="evidence"><b>PLAN</b><span>带依据发布</span><code>/api/acceptance/plans</code></div>
+    <div class="evidence"><b>SEAL</b><span>冻结计划与扫描范围</span><code>/api/acceptance/seals</code></div>
+    <div class="evidence"><b>CHECK</b><span>复验另存差异</span><code>/api/acceptance/rechecks</code></div>
+    <pre id="result">等待运行</pre></div>
+  </section>
+  <section class="panel panel--status">
+    <div class="panel__head"><h2>边界</h2><span class="panel__meta">不越权</span></div>
+    <div class="panel__body"><div class="legend"><span>不动重扫裁决</span><span>不做补扫派工</span></div><div class="legend"><span>签章原件保留</span><span>中断可续跑</span></div></div>
+  </section>
+</div>
+{% endblock %}

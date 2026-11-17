@@ -14,6 +14,7 @@
 | M4 重扫判定 | 比较扫描候选并保留清晰版本 | POST /api/rescans/evaluate | `app/modules/m4_rescans/similarity.py` `app/modules/m4_rescans/decision.py` | `tests/test_m4_rescans.py` |
 | M5 混期归因 | 用页眉和页码证据裁决混期 | POST /api/mixed/evaluate | `app/modules/m5_mixed/evidence.py` `app/modules/m5_mixed/conflicts.py` | `tests/test_m5_mixed.py` |
 | M6 批次对账 | 检查四账并导出证据 | POST /api/reconcile | `app/modules/m6_batches/compare.py` `app/modules/m6_batches/exporter.py` | `tests/test_m6_batches.py` |
+| M7 验收签章 | 计划版本发布、签章冻结、修订复验与回读 | POST /api/acceptance/plans `/seals` `/rechecks` | `app/modules/m7_acceptance/service.py` `app/modules/m7_acceptance/repository.py` | `tests/test_m7_acceptance.py` `tests/test_m7_domain.py` |
 
 ## 陷阱登记
 
@@ -29,6 +30,12 @@
 | TRAP-19 | 候选顺序改变 | 先到者决定保留项 | 显式排序键保持顺序无关 | `app/modules/m3_pages/sequence.py` | `tests/test_m3_pages.py::test_selection_order_independent` |
 | TRAP-22 | 同内容多别名 | 合并顺序改变代表扫描 | 清晰度后以时间和文件名择一 | `app/modules/m4_rescans/decision.py` | `tests/test_m4_rescans.py::test_selection_is_deterministic_on_tie` |
 | TRAP-26 | 陈旧重扫晚提交 | 旧版本覆盖新版 | 版本优先于输入顺序 | `app/modules/m3_pages/sequence.py` | `tests/test_m3_pages.py::test_higher_version_wins_not_later_input` |
+| TRAP-30 | 更正稿直接改页数 | 已签章凭据被篡改 | 计划只追加新版本；签章冻结 plan_digest/scope_digest，原件不可变 | `app/modules/m7_acceptance/repository.py` | `tests/test_m7_acceptance.py::test_seal_freezes_plan_and_scope_and_keeps_conclusion_on_later_revision` |
+| TRAP-31 | 沿用旧稿验收新批次 | 误报漏页/越界 | 签章显式指定 plan_version，按指定版核对四账 | `app/modules/m7_acceptance/service.py` | `tests/test_m7_acceptance.py::test_recheck_detects_newly_missing_and_out_of_range_under_revision` |
+| TRAP-32 | 复验覆盖原件 | 历史结论丢失 | 复验写 m7_rechecks 并产出 diff，签章表无更新路径 | `app/modules/m7_acceptance/repository.py` | `tests/test_m7_acceptance.py::test_recheck_against_revised_plan_saves_diff_without_overwriting_seal` |
+| TRAP-33 | 计划发布与签章并发 | 陈旧客户端覆盖新版本 | expected_version 乐观校验 + (issue_edition,version) 唯一约束，冲突返 409 | `app/modules/m7_acceptance/service.py` | `tests/test_m7_acceptance.py::test_stale_publish_with_old_expected_version_is_rejected` |
+| TRAP-34 | 复验中断后重跑 | 重复生成复验结果 | 确定性 job_id/recheck_id 幂等，续跑只处理未完期版 | `app/modules/m7_acceptance/service.py` | `tests/test_m7_acceptance.py::test_recheck_job_resumes_after_interruption_without_duplicate_results` |
+| TRAP-35 | 扫描范围在签章后漂移 | 复验凭据与原件不符 | 复验重算 scope_digest 与冻结值比对，漂移返 `SCOPE_DRIFT` | `app/modules/m7_acceptance/service.py` | `tests/test_m7_acceptance.py` |
 
 ## 对账规则
 
@@ -39,4 +46,6 @@
 ## 已知不覆盖
 
 - 不读取图像二进制，感知哈希与 OCR 页眉由上游扫描软件提供。
+- M7 不动 M4 重扫裁决，不做补扫派工；只在采纳清单上核对应有/实有/缺失/越界页。
+- M7 复验沿用签章冻结的扫描范围，不重新采信清单、不修改任何签章原件。
 

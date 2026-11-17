@@ -16,6 +16,16 @@ docker compose up --build
 - M4 重扫判定：页面 /rescans，接口 /api/rescans/evaluate
 - M5 混期归因：页面 /mixed，接口 /api/mixed/evaluate
 - M6 批次对账：页面 /batches，接口 /api/reconcile
+- M7 验收签章：页面 /acceptance，接口前缀 /api/acceptance（计划发布、验收签章、复验、回读）
+
+## M7 接口速览
+
+- `POST /api/acceptance/scans/import`：采信真实扫描清单（坏行隔离，同内容幂等复用）
+- `POST /api/acceptance/plans`：按期版发布带依据的页码计划，`expected_version` 做乐观并发控制
+- `POST /api/acceptance/seals`：按计划版本签章，冻结 plan_digest 与 scope_digest
+- `POST /api/acceptance/rechecks`：历史签章按新稿复验，差异另存、原件不动
+- `POST /api/acceptance/recheck-jobs`：批量复验，中断后再次调用恢复未完期版
+- `GET /api/acceptance/issue-edition?issue=&edition=`：回读各版应有、实有、缺失、越界页
 
 ## 运行规则
 
